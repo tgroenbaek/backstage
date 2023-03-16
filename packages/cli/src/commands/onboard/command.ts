@@ -19,45 +19,65 @@ import inquirer from 'inquirer';
 import { Task } from '../../lib/tasks';
 import { auth } from './auth';
 import { integrations } from './integrations';
+import { discover } from './discovery/github';
 
 export async function command(): Promise<void> {
-  const answers = await inquirer.prompt<{
-    shouldSetupAuth: boolean;
-    shouldSetupScaffolder: boolean;
-  }>([
+  // const answers = await inquirer.prompt<{
+  //   url: string;
+  // }>([
+  //   {
+  //     type: 'input',
+  //     name: 'url',
+  //     message: 'What is the URL of the GitHub org/repo that you want to slurp?',
+  //   },
+  // ]);
+
+  const options = Object.assign(
     {
-      type: 'confirm',
-      name: 'shouldSetupAuth',
-      message: 'Do you want to set up Authentication for this project?',
-      default: true,
+      token: process.env.GITHUB_TOKEN || '',
+      url: 'https://github.com/backstage',
     },
-    {
-      type: 'confirm',
-      name: 'shouldSetupScaffolder',
-      message: 'Do you want to use Software Templates in this project?',
-      default: true,
-    },
-  ]);
+    //    answers,
+  );
+  await discover(options);
 
-  const { shouldSetupAuth, shouldSetupScaffolder } = answers;
+  // const answers = await inquirer.prompt<{
+  //   shouldSetupAuth: boolean;
+  //   shouldSetupScaffolder: boolean;
+  // }>([
+  //   {
+  //     type: 'confirm',
+  //     name: 'shouldSetupAuth',
+  //     message: 'Do you want to set up Authentication for this project?',
+  //     default: true,
+  //   },
+  //   {
+  //     type: 'confirm',
+  //     name: 'shouldSetupScaffolder',
+  //     message: 'Do you want to use Software Templates in this project?',
+  //     default: true,
+  //   },
+  // ]);
 
-  let providerInfo;
-  if (shouldSetupAuth) {
-    providerInfo = await auth();
-  }
+  // const { shouldSetupAuth, shouldSetupScaffolder } = answers;
 
-  if (shouldSetupScaffolder) {
-    await integrations(providerInfo);
-  }
+  // let providerInfo;
+  // if (shouldSetupAuth) {
+  //   providerInfo = await auth();
+  // }
 
-  if (!shouldSetupAuth && !shouldSetupScaffolder) {
-    Task.log(
-      chalk.yellow(
-        'If you change your mind, feel free to re-run this command.',
-      ),
-    );
-    return;
-  }
+  // if (shouldSetupScaffolder) {
+  //   await integrations(providerInfo);
+  // }
+
+  // if (!shouldSetupAuth && !shouldSetupScaffolder) {
+  //   Task.log(
+  //     chalk.yellow(
+  //       'If you change your mind, feel free to re-run this command.',
+  //     ),
+  //   );
+  //   return;
+  // }
 
   Task.log();
   Task.log(
