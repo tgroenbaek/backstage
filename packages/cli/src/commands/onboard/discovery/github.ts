@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-import { ScmIntegrations } from '@backstage/integration';
-import { ComponentEntity } from '@backstage/catalog-model';
+// import { ScmIntegrations } from '@backstage/integration';
+// eslint-disable-next-line @backstage/no-undeclared-imports
+import { ComponentEntity, Entity } from '@backstage/catalog-model';
 import { graphql } from '@octokit/graphql';
 import yaml from 'yaml';
+import fs from 'fs-extra';
 import parseGitUrl from 'git-url-parse';
-import { loadCliConfig } from '../../../lib/config';
+// import { loadCliConfig } from '../../../lib/config';
 import { queryWithPaging, RepositoryResponse } from './graphql';
+import { updateConfigFile } from '../config';
+import { APP_CONFIG_FILE, EXAMPLE_CATALOG_FILE } from '../files';
 
 type Options = {
   url: string;
@@ -62,26 +66,69 @@ export async function discover(options: Options) {
     headers: { authorization: `token ${options.token}` },
   });
 
-  const result = await getOrganizationRepositories(client, org);
-  const repos = result.repositories.filter(r => !r.isArchived && !r.isFork);
-  const entities = repos.map(repo => makeEntity(repo.name, repo.description));
-  console.log(JSON.stringify(entities, null, 2));
+  const { repositories } = await getOrganizationRepositories(client, org);
+  const { entities } = await analyzeRepositories(repositories);
+
+  let payload = '';
+  for (const entity of entities) {
+    payload += `---\n${yaml.stringify(entity)}`;
+  }
+  await fs.writeFile(EXAMPLE_CATALOG_FILE, payload);
+  console.log('Wrote example.yaml');
+
+  await updateConfigFile(APP_CONFIG_FILE, {
+    catalog: {
+      locations: [
+        {
+          type: 'file',
+          target: EXAMPLE_CATALOG_FILE,
+        },
+      ],
+    },
+  });
 }
 
-function makeEntity(name: string, description: string): ComponentEntity {
-  console.log(`making ${name} with description ${description}`);
+async function analyzeRepositories(
+  repositories: RepositoryResponse[],
+): Promise<{ entities: Entity[] }> {
+  const entities: Entity[] = [];
+  for (const repository of repositories) {
+    try {
+      const { entities: repoEntities } = await analyzeRepository(repository);
+      entities.push(...repoEntities);
+    } catch (e) {
+      throw new Error(
+        `Failed to analyze repository "${repository.name}", ${e}`,
+      );
+    }
+  }
+
   return {
+    entities,
+  };
+}
+
+async function analyzeRepository(
+  repository: RepositoryResponse,
+): Promise<{ entities: Entity[] }> {
+  const dummy: ComponentEntity = {
     apiVersion: 'backstage.io/v1alpha1',
     kind: 'Component',
     metadata: {
-      name,
-      description,
+      name: repository.name,
+      ...(repository.description
+        ? { description: repository.description }
+        : {}),
     },
     spec: {
       type: 'service',
       lifecycle: 'production',
       owner: 'user:guest',
     },
+  };
+
+  return {
+    entities: [dummy],
   };
 }
 
@@ -120,6 +167,7 @@ export async function getOrganizationRepositories(
         }
       }
     }`;
+
   const repositories = await queryWithPaging(
     client,
     query,
@@ -129,5 +177,5 @@ export async function getOrganizationRepositories(
     { org },
   );
 
-  return { repositories };
+  return { repositories: repositories.filter(r => !r.isArchived && !r.isFork) };
 }

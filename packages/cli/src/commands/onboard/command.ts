@@ -32,6 +32,9 @@ export async function command(): Promise<void> {
   //   },
   // ]);
 
+  /*
+  TODO: Add verification that current directory is a Backstage app
+  */
   const options = Object.assign(
     {
       token: process.env.GITHUB_TOKEN || '',

@@ -28,3 +28,4 @@ export const PATCH_FOLDER = path.join(
   'auth',
   'patches',
 );
+export const EXAMPLE_CATALOG_FILE = path.join(targetRoot, 'example.yaml');
