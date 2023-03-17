@@ -26,8 +26,8 @@ import { graphql } from '@octokit/graphql';
  * @param org - The slug of the org to read
  * @param connection - A function that, given the response, picks out the actual
  *                   Connection object that's being iterated
- * @param transformer - A function that, given one of the nodes in the Connection,
- *               returns the model mapped form of it
+ * @param transformer - A function that, given one of the nodes in the
+ *               Connection, returns the model mapped form of it
  * @param variables - The variable values that the query needs, minus the cursor
  */
 export async function queryWithPaging<

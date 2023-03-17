@@ -30,6 +30,7 @@
     "backstage-cli": "bin/backstage-cli"
   },
   "dependencies": {
+    "@backstage/catalog-model": "workspace:^",
     "@backstage/cli-common": "workspace:^",
     "@backstage/config": "workspace:^",
     "@backstage/config-loader": "workspace:^",
