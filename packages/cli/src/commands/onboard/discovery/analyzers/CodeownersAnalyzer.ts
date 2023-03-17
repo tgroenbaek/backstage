@@ -15,7 +15,7 @@
  */
 
 import { Repository } from '../integrations/types';
-import { Analyzer, AnalysisOutputs } from './types';
+import { AnalysisOutputs, Analyzer } from './types';
 
 /**
  * Attempts to locate codeowners files in a repository and injects ownership

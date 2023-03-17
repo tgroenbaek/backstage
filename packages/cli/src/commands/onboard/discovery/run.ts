@@ -21,11 +21,11 @@ import { updateConfigFile } from '../config';
 import { APP_CONFIG_FILE, EXAMPLE_CATALOG_FILE } from '../files';
 import { Analyzers } from './Analyzers';
 import { BasicRepositoryEntityAnalyzer } from './analyzers/BasicRepositoryEntityAnalyzer';
-import { GithubIntegration } from './integrations/github';
+import { GithubIntegration } from './integrations/GithubIntegration';
 
 export async function run(options: { url: string }) {
   const { fullConfig: config } = await loadCliConfig({
-    args: process.argv.slice(1),
+    args: [], // process.argv.slice(1),
     fromPackage: '@backstage/cli',
     mockEnv: true,
     fullVisibility: true,

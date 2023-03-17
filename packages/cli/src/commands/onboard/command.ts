@@ -15,11 +15,8 @@
  */
 
 import chalk from 'chalk';
-import inquirer from 'inquirer';
 import { Task } from '../../lib/tasks';
-import { auth } from './auth';
-import { integrations } from './integrations';
-import { discover } from './discovery/github';
+import { run } from './discovery/run';
 
 export async function command(): Promise<void> {
   // const answers = await inquirer.prompt<{
@@ -37,12 +34,11 @@ export async function command(): Promise<void> {
   */
   const options = Object.assign(
     {
-      token: process.env.GITHUB_TOKEN || '',
       url: 'https://github.com/backstage',
     },
     //    answers,
   );
-  await discover(options);
+  await run(options);
 
   // const answers = await inquirer.prompt<{
   //   shouldSetupAuth: boolean;

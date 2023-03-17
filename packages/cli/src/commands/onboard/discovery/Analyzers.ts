@@ -43,14 +43,22 @@ export class Analyzers {
   }
 
   async run(url: string): Promise<{ entities: Entity[] }> {
+    console.log(`Running discovery for ${url}...`);
     const result: Entity[] = [];
 
     for (const integration of this.#integrations) {
       const repositories = await integration.discover(url);
-      if (repositories) {
-        for (const repository of repositories) {
-          const output = new DefaultAnalysisOutputs();
+      if (repositories && repositories.length) {
+        console.log(
+          `Discovered ${
+            repositories.length
+          } repositories for ${integration.name()}`,
+        );
 
+        for (const repository of repositories) {
+          console.log(`  Analyzing ${repository.name}...`);
+
+          const output = new DefaultAnalysisOutputs();
           for (const analyzer of this.#analyzers) {
             await analyzer.analyzeRepository({ repository, output });
           }
@@ -60,8 +68,13 @@ export class Analyzers {
             .filter(o => o.type === 'entity')
             .map(o => o.entity);
 
-          result.push(...entities);
+          if (entities.length) {
+            console.log(`    Found ${entities.length} entities`);
+            result.push(...entities);
+          }
         }
+
+        console.log(`Produced ${result.length || 'no'} entities`);
 
         return {
           entities: result,

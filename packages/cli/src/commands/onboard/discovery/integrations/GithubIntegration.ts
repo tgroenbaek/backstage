@@ -15,6 +15,11 @@
  */
 
 import { Config } from '@backstage/config';
+import {
+  DefaultGithubCredentialsProvider,
+  GithubCredentialsProvider,
+  ScmIntegrations,
+} from '@backstage/integration';
 import { graphql } from '@octokit/graphql';
 import parseGitUrl from 'git-url-parse';
 import { queryWithPaging, RepositoryResponse } from '../graphql';
@@ -37,7 +42,7 @@ class GithubFile implements RepositoryFile {
   }
 
   async content(): Promise<Buffer> {
-    this.#content = this.#doGetContent();
+    this.#content ??= this.#doGetContent();
     return this.#content;
   }
 
@@ -50,12 +55,12 @@ class GithubFile implements RepositoryFile {
  * A GitHub repository.
  */
 class GithubRepository implements Repository {
-  readonly #octokit: typeof graphql;
+  readonly #client: typeof graphql;
   readonly #repo: RepositoryResponse;
   #files: Promise<RepositoryFile[]> | undefined;
 
-  constructor(octokit: typeof graphql, repo: RepositoryResponse) {
-    this.#octokit = octokit;
+  constructor(client: typeof graphql, repo: RepositoryResponse) {
+    this.#client = client;
     this.#repo = repo;
   }
 
@@ -85,19 +90,34 @@ class GithubRepository implements Repository {
  * Integration for GitHub.
  */
 export class GithubIntegration implements Integration {
-  readonly #token: string;
+  readonly #envToken: string | undefined;
+  readonly #scmIntegrations: ScmIntegrations;
+  readonly #credentialsProvider: GithubCredentialsProvider;
 
-  static fromConfig(_config: Config): GithubIntegration {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-      throw new Error(`Missing GITHUB_TOKEN environment variable`);
-    }
-
-    return new GithubIntegration(token);
+  static fromConfig(config: Config): GithubIntegration {
+    const envToken = process.env.GITHUB_TOKEN || undefined;
+    const scmIntegrations = ScmIntegrations.fromConfig(config);
+    const credentialsProvider =
+      DefaultGithubCredentialsProvider.fromIntegrations(scmIntegrations);
+    return new GithubIntegration(
+      envToken,
+      scmIntegrations,
+      credentialsProvider,
+    );
   }
 
-  private constructor(token: string) {
-    this.#token = token;
+  private constructor(
+    envToken: string | undefined,
+    integrations: ScmIntegrations,
+    credentialsProvider: GithubCredentialsProvider,
+  ) {
+    this.#envToken = envToken;
+    this.#scmIntegrations = integrations;
+    this.#credentialsProvider = credentialsProvider;
+  }
+
+  name(): string {
+    return 'GitHub';
   }
 
   async discover(url: string): Promise<Repository[] | false> {
@@ -105,20 +125,18 @@ export class GithubIntegration implements Integration {
       return false;
     }
 
-    // const integrations = ScmIntegrations.fromConfig(fullConfig);
-    // const integration = integrations.byUrl(options.url);
-    // if (!integration) {
-    //   // seems we don't have any auth for this one
-    // }
+    const scmIntegration = this.#scmIntegrations.github.byUrl(url);
+    if (!scmIntegration) {
+      throw new Error(`No GitHub integration found for ${url}`);
+    }
 
     const parsed = parseGitUrl(url);
     const { name, organization } = parsed;
     const org = organization || name; // depends on if it's a repo url or an org url...
 
     const client = graphql.defaults({
-      // baseUrl: "https://github-enterprise.acme-inc.com/api",
-      // TODO: integrations
-      headers: { authorization: `token ${this.#token}` },
+      baseUrl: scmIntegration.config.apiBaseUrl,
+      headers: await this.#getRequestHeaders(url),
     });
 
     const { repositories } = await this.#getOrganizationRepositories(
@@ -126,7 +144,30 @@ export class GithubIntegration implements Integration {
       org,
     );
 
-    return repositories.map(r => new GithubRepository(client, r));
+    return repositories.map(repo => new GithubRepository(client, repo));
+  }
+
+  async #getRequestHeaders(url: string): Promise<Record<string, string>> {
+    try {
+      const credentials = await this.#credentialsProvider.getCredentials({
+        url,
+      });
+      if (credentials.headers) {
+        return credentials.headers;
+      } else if (credentials.token) {
+        return { authorization: `token ${credentials.token}` };
+      }
+    } catch {
+      // ignore silently
+    }
+
+    if (this.#envToken) {
+      return { authorization: `token ${this.#envToken}` };
+    }
+
+    throw new Error(
+      'No token available for GitHub, please configure your integrations or set a GITHUB_TOKEN env variable',
+    );
   }
 
   async #getOrganizationRepositories(

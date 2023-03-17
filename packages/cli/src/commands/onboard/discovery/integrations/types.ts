@@ -48,5 +48,6 @@ export interface RepositoryFile {
  * One integration that supports discovery of repositories.
  */
 export interface Integration {
+  name(): string;
   discover(url: string): Promise<Repository[] | false>;
 }
