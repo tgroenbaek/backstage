@@ -22,6 +22,10 @@ import { AnalysisOutputs, Analyzer } from './types';
  * info into previously entities, if they did not have any such info already.
  */
 export class CodeownersAnalyzer implements Analyzer {
+  name(): string {
+    return CodeownersAnalyzer.name;
+  }
+
   async analyzeRepository(options: {
     repository: Repository;
     output: AnalysisOutputs;

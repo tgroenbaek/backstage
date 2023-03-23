@@ -21,6 +21,7 @@ import { updateConfigFile } from '../config';
 import { APP_CONFIG_FILE, EXAMPLE_CATALOG_FILE } from '../files';
 import { Analyzers } from './Analyzers';
 import { BasicRepositoryEntityAnalyzer } from './analyzers/BasicRepositoryEntityAnalyzer';
+import { PackageJsonAnalyzer } from './analyzers/PackageJsonAnalyzer';
 import { GithubIntegration } from './integrations/GithubIntegration';
 
 export async function run(options: { url: string }) {
@@ -33,7 +34,8 @@ export async function run(options: { url: string }) {
 
   const analyzers = new Analyzers();
   analyzers.addIntegration(GithubIntegration.fromConfig(config));
-  analyzers.addAnalyzer(new BasicRepositoryEntityAnalyzer());
+  // analyzers.addAnalyzer(new BasicRepositoryEntityAnalyzer());
+  analyzers.addAnalyzer(new PackageJsonAnalyzer());
 
   const { entities } = await analyzers.run(options.url);
 

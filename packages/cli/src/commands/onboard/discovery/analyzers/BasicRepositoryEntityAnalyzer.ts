@@ -23,6 +23,10 @@ import { AnalysisOutputs, Analyzer } from './types';
  * as a whole.
  */
 export class BasicRepositoryEntityAnalyzer implements Analyzer {
+  name(): string {
+    return BasicRepositoryEntityAnalyzer.name;
+  }
+
   async analyzeRepository(options: {
     repository: Repository;
     output: AnalysisOutputs;

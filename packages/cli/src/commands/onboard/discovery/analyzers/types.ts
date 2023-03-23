@@ -29,6 +29,7 @@ export interface AnalysisOutputs {
 }
 
 export interface Analyzer {
+  name(): string;
   analyzeRepository(options: {
     repository: Repository;
     output: AnalysisOutputs;

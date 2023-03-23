@@ -22,7 +22,7 @@ export interface Repository {
 
   name: string;
 
-  // owner?: { name: string };
+  owner: string;
 
   description?: string;
 
@@ -39,9 +39,9 @@ export interface RepositoryFile {
   path: string;
 
   /**
-   * The binary contents of the file.
+   * The textual contents of the file.
    */
-  content(): Promise<Buffer>;
+  text(): Promise<string>;
 }
 
 /**
