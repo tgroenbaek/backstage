@@ -15,6 +15,7 @@
  */
 
 import { compileConfigSchemas } from './compile';
+import { ValidationFunc } from './types';
 
 describe('compileConfigSchemas', () => {
   it('should merge schemas', () => {
@@ -28,7 +29,7 @@ describe('compileConfigSchemas', () => {
         value: { type: 'object', properties: { b: { type: 'number' } } },
       },
     ]);
-    expect(validate([{ data: { a: 1 }, context: 'test' }])).toEqual({
+    expect(validate([{ data: { a: [1] }, context: 'test' }])).toEqual({
       errors: [
         {
           keyword: 'type',
@@ -168,6 +169,117 @@ describe('compileConfigSchemas', () => {
       ),
       visibilityByDataPath: new Map(),
       visibilityBySchemaPath: new Map(),
+    });
+  });
+
+  describe('should mutate configs if values can be coerced', () => {
+    let validate: ValidationFunc;
+
+    beforeEach(() => {
+      validate = compileConfigSchemas([
+        {
+          path: 'a',
+          value: { type: 'object', properties: { a: { type: 'string' } } },
+        },
+        {
+          path: 'b',
+          value: { type: 'object', properties: { b: { type: 'number' } } },
+        },
+        {
+          path: 'c',
+          value: { type: 'object', properties: { c: { type: 'boolean' } } },
+        },
+      ]);
+    });
+
+    it('from strings', () => {
+      const configs = [
+        { data: { a: 'already a string' }, context: 'test' },
+        { data: { b: '123' }, context: 'test' },
+        { data: { c: 'true' }, context: 'test' },
+      ];
+
+      validate(configs);
+
+      expect(configs[0].data.a).toStrictEqual('already a string');
+      expect(configs[1].data.b).toStrictEqual(123);
+      expect(configs[2].data.c).toStrictEqual(true);
+    });
+
+    it('from numbers', () => {
+      const configs = [
+        { data: { a: 42 }, context: 'test' },
+        { data: { b: 3.14 }, context: 'test' },
+        { data: { c: 0 }, context: 'test' },
+      ];
+
+      validate(configs);
+
+      expect(configs[0].data.a).toStrictEqual('42');
+      expect(configs[1].data.b).toStrictEqual(3.14);
+      expect(configs[2].data.c).toStrictEqual(false);
+    });
+
+    it('from booleans', () => {
+      const configs = [
+        { data: { a: true }, context: 'test' },
+        { data: { b: false }, context: 'test' },
+        { data: { c: true }, context: 'test' },
+      ];
+
+      validate(configs);
+
+      expect(configs[0].data.a).toStrictEqual('true');
+      expect(configs[1].data.b).toStrictEqual(0);
+      expect(configs[2].data.c).toStrictEqual(true);
+    });
+
+    it('from invalid strings', () => {
+      const configs = [
+        { data: { b: 'not a number' }, context: 'test' },
+        { data: { c: 'not a boolean' }, context: 'test' },
+      ];
+
+      expect(validate(configs)).toEqual({
+        errors: [
+          {
+            keyword: 'type',
+            instancePath: '/b',
+            schemaPath: '#/properties/b/type',
+            message: 'must be number',
+            params: { type: 'number' },
+          },
+          {
+            keyword: 'type',
+            instancePath: '/c',
+            schemaPath: '#/properties/c/type',
+            message: 'must be boolean',
+            params: { type: 'boolean' },
+          },
+        ],
+        visibilityByDataPath: new Map(),
+        visibilityBySchemaPath: new Map(),
+        deprecationByDataPath: new Map(),
+      });
+    });
+
+    it('from invalid numbers', () => {
+      const configs = [{ data: { c: 3 }, context: 'test' }];
+
+      expect(validate(configs)).toEqual({
+        errors: [
+          {
+            keyword: 'type',
+            instancePath: '/c',
+            schemaPath: '#/properties/c/type',
+            message: 'must be boolean',
+            params: { type: 'boolean' },
+          },
+        ],
+        visibilityByDataPath: new Map(),
+        visibilityBySchemaPath: new Map(),
+        deprecationByDataPath: new Map(),
+      });
     });
   });
 });

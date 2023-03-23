@@ -45,6 +45,7 @@ export function compileConfigSchemas(
   const ajv = new Ajv({
     allErrors: true,
     allowUnionTypes: true,
+    coerceTypes: true,
     schemas: {
       'https://backstage.io/schema/config-v1': true,
     },
@@ -115,6 +116,7 @@ export function compileConfigSchemas(
 
     visibilityByDataPath.clear();
 
+    // Provide a single validation decision based on combined configs.
     const valid = validate(config);
 
     if (!valid) {
@@ -125,6 +127,11 @@ export function compileConfigSchemas(
         deprecationByDataPath,
       };
     }
+
+    // Given we know this is a valid config, re-validate each config's data
+    // values individually in order to allow type coercion mutations to make
+    // their way up to callers.
+    configs.forEach(conf => validate(conf.data));
 
     return {
       visibilityByDataPath: new Map(visibilityByDataPath),
