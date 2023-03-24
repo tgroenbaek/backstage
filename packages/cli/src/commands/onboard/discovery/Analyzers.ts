@@ -52,7 +52,7 @@ export class Analyzers {
         console.log(
           `Discovered ${
             repositories.length
-          } repositories for ${integration.name()}`,
+          } ${integration.type()}(s) for ${integration.name()}`,
         );
 
         for (const repository of repositories) {

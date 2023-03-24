@@ -49,5 +49,6 @@ export interface RepositoryFile {
  */
 export interface Integration {
   name(): string;
+  type(): string;
   discover(url: string): Promise<Repository[] | false>;
 }

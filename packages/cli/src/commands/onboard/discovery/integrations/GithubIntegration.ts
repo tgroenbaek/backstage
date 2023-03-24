@@ -167,6 +167,10 @@ export class GithubIntegration implements Integration {
     return 'GitHub';
   }
 
+  type(): string {
+    return 'Repository';
+  }
+
   async discover(url: string): Promise<Repository[] | false> {
     if (!url.startsWith('https://github.com/')) {
       return false;
