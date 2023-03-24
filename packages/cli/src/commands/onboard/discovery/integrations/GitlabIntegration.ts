@@ -31,15 +31,21 @@ interface GitlabCredentialsProvider {
   getCredentials(opts: { url: string }): Promise<GitlabCredentials>;
 }
 
+class SingleInstanceGitlabCredentialsProvider
+  implements GitlabCredentialsProvider
+{
+  async getCredentials(_opts: { url: string }): Promise<GitlabCredentials> {
+    throw new Error('Not implemented');
+  }
+}
+
 class DefaultGitlabCredentialsProvider implements GitlabCredentialsProvider {
   static fromIntegrations(integrations: ScmIntegrationRegistry) {
     const credentialsProviders: Map<string, GitlabCredentialsProvider> =
       new Map<string, GitlabCredentialsProvider>();
 
-    integrations.github.list().forEach(integration => {
-      const credentialsProvider = new DefaultGitlabCredentialsProvider(
-        credentialsProviders,
-      );
+    integrations.gitlab.list().forEach(integration => {
+      const credentialsProvider = new SingleInstanceGitlabCredentialsProvider();
       credentialsProviders.set(integration.config.host, credentialsProvider);
     });
     return new DefaultGitlabCredentialsProvider(credentialsProviders);
