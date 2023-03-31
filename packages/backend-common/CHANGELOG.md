@@ -1,5 +1,16 @@
 # @backstage/backend-common
 
+## 0.18.4-next.2
+
+### Patch Changes
+
+- 5c7ce585824: Allow an additionalConfig to be provided to loadBackendConfig that fetches config values during runtime.
+- Updated dependencies
+  - @backstage/backend-app-api@0.4.2-next.2
+  - @backstage/backend-plugin-api@0.5.1-next.2
+  - @backstage/config@1.0.7
+  - @backstage/integration-aws-node@0.1.2
+
 ## 0.18.4-next.1
 
 ### Patch Changes

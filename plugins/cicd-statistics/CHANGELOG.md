@@ -1,5 +1,14 @@
 # @backstage/plugin-cicd-statistics
 
+## 0.1.19-next.2
+
+### Patch Changes
+
+- 55a969fe574: Bumped `recharts` dependency to `^2.5.0`.
+- Updated dependencies
+  - @backstage/core-plugin-api@1.5.1-next.1
+  - @backstage/plugin-catalog-react@1.4.1-next.2
+
 ## 0.1.19-next.1
 
 ### Patch Changes

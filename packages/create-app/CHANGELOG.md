@@ -1,5 +1,18 @@
 # @backstage/create-app
 
+## 0.4.39-next.2
+
+### Patch Changes
+
+- 2945923b133: Upgraded the TypeScript version to 5.0
+
+  To apply this change in your own project, switch the TypeScript version in your root `package.json`:
+
+  ```diff
+  -    "typescript": "~4.6.4",
+  +    "typescript": "~5.0.0",
+  ```
+
 ## 0.4.39-next.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @backstage/plugin-git-release-manager
 
+## 0.3.30-next.2
+
+### Patch Changes
+
+- 55a969fe574: Bumped `recharts` dependency to `^2.5.0`.
+- Updated dependencies
+  - @backstage/core-plugin-api@1.5.1-next.1
+  - @backstage/core-components@0.12.6-next.2
+
 ## 0.3.30-next.1
 
 ### Patch Changes

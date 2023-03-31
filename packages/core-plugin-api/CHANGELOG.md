@@ -1,5 +1,13 @@
 # @backstage/core-plugin-api
 
+## 1.5.1-next.1
+
+### Patch Changes
+
+- 2898b6c8d52: Minor type tweaks for TypeScript 5.0
+- Updated dependencies
+  - @backstage/config@1.0.7
+
 ## 1.5.1-next.0
 
 ### Patch Changes
